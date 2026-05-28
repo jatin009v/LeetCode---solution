@@ -1,58 +1,82 @@
 // 3093. Longest Common Suffix Queries
 
 struct TrieNode {
-  vector<shared_ptr<TrieNode>> children;
-  TrieNode() : children(26) {}
-  int length = INT_MAX;
-  int index = -1;
+    vector<shared_ptr<TrieNode>> children;
+
+    TrieNode() : children(26, nullptr) {}
+
+    int length = INT_MAX;
+    int index = -1;
 };
 
 class Solution {
- public:
-  vector<int> stringIndices(vector<string>& wordsContainer,
-                            vector<string>& wordsQuery) {
-    vector<int> ans;
-    int minIndex = 0;
+public:
+    vector<int> stringIndices(vector<string>& wordsContainer,
+                              vector<string>& wordsQuery) {
 
-    for (int i = 0; i < wordsContainer.size(); ++i) {
-      insert(wordsContainer[i], i);
-      if (wordsContainer[i].length() < wordsContainer[minIndex].length())
-        minIndex = i;
+        vector<int> ans;
+
+        int minIndex = 0;
+
+        for (int i = 0; i < wordsContainer.size(); ++i) {
+
+            if (wordsContainer[i].length() <
+                wordsContainer[minIndex].length()) {
+                minIndex = i;
+            }
+
+            insert(wordsContainer[i], i);
+        }
+
+        root->index = minIndex;
+
+        for (const string& q : wordsQuery) {
+            ans.push_back(search(q));
+        }
+
+        return ans;
     }
 
-    for (const string& query : wordsQuery) {
-      const int index = search(query);
-      ans.push_back(index == -1 ? minIndex : index);
+private:
+    shared_ptr<TrieNode> root = make_shared<TrieNode>();
+
+    void insert(const string& word, int wordIndex) {
+
+        shared_ptr<TrieNode> node = root;
+
+        for (int i = word.length() - 1; i >= 0; --i) {
+
+            int charIndex = word[i] - 'a';
+
+            if (node->children[charIndex] == nullptr) {
+                node->children[charIndex] =
+                    make_shared<TrieNode>();
+            }
+
+            node = node->children[charIndex];
+
+            if (node->length > word.length()) {
+                node->length = word.length();
+                node->index = wordIndex;
+            }
+        }
     }
 
-    return ans;
-  }
+    int search(const string& word) {
 
- private:
-  shared_ptr<TrieNode> root = make_shared<TrieNode>();
+        shared_ptr<TrieNode> node = root;
 
-  void insert(const string& word, int index) {
-    shared_ptr<TrieNode> node = root;
-    for (int i = word.length() - 1; i >= 0; --i) {
-      const int index = word[i] - 'a';
-      if (node->children[index] == nullptr)
-        node->children[index] = make_shared<TrieNode>();
-      node = node->children[index];
-      if (node->length > word.length()) {
-        node->length = word.length();
-        node->index = index;
-      }
-    }
-  }
+        for (int i = word.length() - 1; i >= 0; --i) {
 
-  int search(const string& word) {
-    shared_ptr<TrieNode> node = root;
-    for (int i = word.length() - 1; i >= 0; --i) {
-      const int index = word[i] - 'a';
-      if (node->children[index] == nullptr)
+            int charIndex = word[i] - 'a';
+
+            if (node->children[charIndex] == nullptr) {
+                return node->index;
+            }
+
+            node = node->children[charIndex];
+        }
+
         return node->index;
-      node = node->children[index];
     }
-    return node->index;
-  }
 };
